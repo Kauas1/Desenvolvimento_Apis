@@ -1,11 +1,12 @@
 import express from "express"
+import {v4 as uuidv4} from 'uuid'
 const PORT = 3333
 
-const app = express()
+const app = express();
 
 
 //Aceitar JSON
-app.use(express.json())
+app.use(express.json());
 
 // Rotas
 /** Request HTTP
@@ -16,57 +17,89 @@ app.use(express.json())
  * body params - ...:3333/pessoas
  *  Rotas do tipo POST (Cadastro de informações)
  */
+
+// Middleware
+const logRoutes = (request, response , next) =>{
+    const {url, method} = request
+    const rota = `[${method.toUpperCase()}] ${url}`
+    console.log(rota)
+    next()
+};
+
+// Middleware para todas as rotas
+app.use(logRoutes)
+
 // query params
+const users = []
 app.get("/users", (request, response)=>{
-    // const query = request.query // Recomendável usar o de cima
-    // console.log(query)
-    const {nome, idade} = request.query //Desestruturar o query params
-    console.log(nome, idade)
-    response.status(201).json([
-        "Pessoa 1",
-        "Pessoa 2",
-        "Pessoa 3",
-        "Pessoa 4"
-    ]) 
-})
+    response.status(200).json(users) 
+});
+
 // Body Params
 app.post("/users", (request, response)=>{
-    // const body = request.body
-    // console.log(body)
     const {nome, idade} = request.body
-    console.log(nome,idade)
-    response.status(201).json([
-        "Pessoa 1",
-        "Pessoa 2",
-        "Pessoa 3",
-        "Pessoa 4"
-    ]) 
-})
+
+    // validações
+    if(!nome){
+        response.status(400).json({message: "Nome é obrigatorio"})
+        return
+    }
+
+    if(!idade){
+        response.status(400).json({message: "A idade é obrigatoria"})
+        return
+    }
+
+    const user = {
+        id: uuidv4(),
+        nome,
+        idade
+    }
+    users.push(user)
+
+    response.status(201).json({message: "Usuário cadastrado", 
+    user
+}); 
+});
 
 // Routes Params
-app.put("/users/:id/:cpf", (request, response)=>{
-    // 1
-    // const id = request.params.id
-    // const cpf = request.params.cpf
-    const {id,cpf} = request.params
-    console.log(id,cpf)
-    response.status(201).json([
-        "Pessoa 1",
-        "Pessoa 10",
-        "Pessoa 3",
-        "Pessoa 4"
-    ]) 
-})
+app.put("/users/:id", (request, response)=>{
+    const {id} = request.params
+    const {nome, idade} = request.body
 
-app.delete("/users", (request, response)=>{
-    response.status(200).json([
-        "Pessoa 10",
-        "Pessoa 3",
-        "Pessoa 4"
-    ]) 
-})
+    const index = users.findIndex((user)=> user.id === id)
+
+    if(index === -1){
+        return response.status(404).json({message:"Usuário não encontrado."})
+    }
+
+    if(!nome || !idade){
+        return response.status(400).json({message:"nome e idade são campos obrigatórios."})
+    }
+    const updtUser ={
+        id,
+        nome,
+        idade
+    }
+
+    users[index] = updtUser
+    response.status(201).json(updtUser) 
+});
+
+app.delete("/users/:id", (request, response)=>{
+    const id = request.params.id
+    
+    const indexUser = users.findIndex((user)=> user.id == id)
+    if(indexUser === -1){
+        response.status(404).json({message: "Usuário não encontrado"})
+        return
+    }
+
+    users.splice(indexUser,1)
+    response.status(204).send("apagado")
+});
 
 
 app.listen(PORT, ()=>{
     console.log("Servidor on PORT " + PORT)
-})
+});
