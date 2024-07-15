@@ -4,7 +4,7 @@
 /////////////////////
 
 import "dotenv/config" ;
-import express,{application, response} from "express";
+import express, {application, response} from "express";
 import mysql from "mysql2";
 import { v4 as uuidv4 } from "uuid";
 
@@ -108,6 +108,8 @@ app.post('/livros', (req, res)=>{
 
 app.get('/livros/:id', (req, res)=>{
     const {id} = request.params
+
+    
 })
 app.put('/livros/:id', (req, res)=>{
     const {id} = request.params
