@@ -1,8 +1,3 @@
-
-
-
-/////////////////////
-
 import "dotenv/config" ;
 import express, {application, response} from "express";
 import mysql from "mysql2";
@@ -34,42 +29,44 @@ conn.connect((err)=>{
 });
 
 
-app.get("/livros", (req, res)=>{
+app.get("/livros", (request, response)=>{
     //query para banco de dados(consulta)
     const sql = /*sql*/`SELECT * FROM livros`;
 
     conn.query(sql, (err, data)=>{
         if(err){
-            res.status(500).json({message:'Erro ao buscar livros'});
+            response.status(500).json({message:'Erro ao buscar livros'});
             return console.log(err);
         };
 
         const livros = data;
-        res.status(200).json(livros);
+        response.status(200).json(livros);
     });
 });
 
-app.post('/livros', (req, res)=>{
-    const {titulo, autor, ano_publicacao, genero, preco} = req.body;
+app.post('/livros', (request, response)=>{
+    const {titulo, autor, ano_publicacao, genero, preco} = request.body;
 
     //validacoes
     if(!titulo){
-        res.status(400).json({message: 'Campo obrigatório'});
+        response.status(400).json({message: 'Campo obrigatório'});
         return 
     } else if(!autor){
-        res.status(400).json({message: 'Campo obrigatório'});
+        response.status(400).json({message: 'Campo obrigatório'});
         return 
     } else if(!ano_publicacao){
-        res.status(400).json({message: 'Campo obrigatório'});
+        response.status(400).json({message: 'Campo obrigatório'});
         return 
     } else if(!genero){
-        res.status(400).json({message: 'Campo obrigatório'});
+        response.status(400).json({message: 'Campo obrigatório'});
         return 
     } else if(!preco){
-        res.status(400).json({message: 'Campo obrigatório'});
+        response.status(400).json({message: 'Campo obrigatório'});
         return 
     };
 
+
+    // Logo abaixo viria o FS.
 //Cadastrar um livro -> antes preciso saber se este livro existe
     const checksql = /*sql*/ `
     SELECT * FROM livros 
@@ -79,12 +76,12 @@ app.post('/livros', (req, res)=>{
 
     conn.query(checksql, (err, data)=>{
         if(err){
-            res.status(500).json({message:'Erro ao buscar livros'});
+            response.status(500).json({message:'Erro ao buscar livros'});
             return console.log(err);
         };
 
         if(data.length > 0){
-            res.status(409).json({message:"Esse livro já existe na livraria"});
+            response.status(409).json({message:"Esse livro já existe na livraria"});
             return console.log(err);
         }
 
@@ -96,27 +93,46 @@ app.post('/livros', (req, res)=>{
 
         conn.query(insertSql, (err) =>{
             if(err){
-                res.status(500).json({message:'Erro ao cadastar livro'});
+                response.status(500).json({message:'Erro ao cadastar livro'});
                 return console.log(err);
             };
 
-            res.status(201).json({message:'Livro cadastrado'})
+            response.status(201).json({message:'Livro cadastrado'})
         })
 
     });
 });
-
-app.get('/livros/:id', (req, res)=>{
+//https://luizalorien.atlassian.net/jira/your-work
+// Listar um livro 
+app.get('/livros/:id', (request, response)=>{
     const {id} = request.params
 
+    const sql = /*sql*/ `
+    SELECT * FROM livros WHERE id = "${id}"`
     
+    conn.query(sql, (err, data)=>{
+        if(err){
+          console.error(err)
+          response.status(500).json({message: "Erro ao buscar os Dados."})
+          return
+        }
+
+        if(data.length === 0){
+           return response.status(404).json({message: "Livro não encontrado."})
+        }
+
+        response.status(200).json(data)
+
+    })
 })
-app.put('/livros/:id', (req, res)=>{
+
+
+app.put('/livros/:id', (request, response)=>{
     const {id} = request.params
 })
-app.delete('/livros/:id', (req, res)=>{
+app.delete('/livros/:id', (request, response)=>{
     const {id} = request.params
 })
-app.use((req, res)=>{
-    res.status(404).json({message:"Não encontrado"});
+app.use((request, response)=>{
+    response.status(404).json({message:"Não encontrado"});
 });
