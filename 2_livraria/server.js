@@ -68,13 +68,13 @@ app.post('/livros', (request, response)=>{
 
     // Logo abaixo viria o FS.
 //Cadastrar um livro -> antes preciso saber se este livro existe
-    const checksql = /*sql*/ `
+    const checkSql = /*sql*/ `
     SELECT * FROM livros 
     WHERE titulo = "${titulo}" AND 
     autor = "${autor}" AND 
     ano_publicacao = "${ano_publicacao}"`;
 
-    conn.query(checksql, (err, data)=>{
+    conn.query(checkSql, (err, data)=>{
         if(err){
             response.status(500).json({message:'Erro ao buscar livros'});
             return console.log(err);
@@ -129,10 +129,82 @@ app.get('/livros/:id', (request, response)=>{
 
 app.put('/livros/:id', (request, response)=>{
     const {id} = request.params
+
+    const {titulo, autor, ano_publicacao, genero, preco, disponibilidade} = request.body;
+
+// Validações
+if(!titulo){
+    response.status(400).json({message: 'Campo obrigatório'});
+    return 
+} else if(!autor){
+    response.status(400).json({message: 'Campo obrigatório'});
+    return 
+} else if(!ano_publicacao){
+    response.status(400).json({message: 'Campo obrigatório'});
+    return 
+} else if(!genero){
+    response.status(400).json({message: 'Campo obrigatório'});
+    return 
+} else if(!preco){
+    response.status(400).json({message: 'Campo obrigatório'});
+    return 
+}
+
+if(disponibilidade === undefined){
+    response.status(400).json({message: 'A disponibilidade é obrigatória.'})
+    return;
+}
+
+const checkSql = /*sql*/ ` SELECT * FROM livros where id = "${id}"`
+conn.query(checkSql,(err,data)=>{
+    if(err){
+        console.error(err)
+        response.status(500).json({message:"Erro ao ler os Dados."})
+    }
+
+    if(data.length === 0){
+        return response.status(404).json({message: "Livro não encontrado."})
+    }
+
+    // Consulta SQL para atualizar livro
+
+    const updateSql = /*sql*/ `
+    UPDATE livros 
+    SET titulo = "${titulo}", autor = "${autor}", ano_publicacao = "${ano_publicacao}", genero = "${genero}", preco = "${preco}", disponibilidade = "${disponibilidade}"
+    WHERE id = "${id}"`
+    
+    conn.query(updateSql, (err)=>{
+        if(err){
+            console.error(err)
+            response.status(500).json({message: "Erro ao atualizar os livros"})
+            return
+        }
+
+        response.status(200).json({message: "Livro atualizado."})
+    })
 })
+})
+
+
 app.delete('/livros/:id', (request, response)=>{
     const {id} = request.params
+
+    const deleteSql = /*sql*/`
+    DELETE FROM livros
+    `
+
+    conn.query(deleteSql, (err)=>{
+        if(err){
+            console.error(err)
+            response.status(500).json({message:"Erro ao deletar o livro"})
+            return
+        }
+
+        response.status(200).json({message: "Livro Selecionado foi deletado."})
+    })
 })
+
+
 app.use((request, response)=>{
     response.status(404).json({message:"Não encontrado"});
 });
