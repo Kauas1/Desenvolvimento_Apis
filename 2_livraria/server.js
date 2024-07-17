@@ -121,8 +121,8 @@ app.get('/livros/:id', (request, response)=>{
            return response.status(404).json({message: "Livro não encontrado."})
         }
 
-        response.status(200).json(data)
-
+        const livro = data[0]
+        response.status(200).json(livro)
     })
 })
 
