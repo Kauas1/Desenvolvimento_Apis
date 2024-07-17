@@ -190,13 +190,18 @@ app.delete('/livros/:id', (request, response)=>{
     const {id} = request.params
 
     const deleteSql = /*sql*/`
-    DELETE FROM livros
+    DELETE FROM livros WHERE id = "${id}"
     `
 
-    conn.query(deleteSql, (err)=>{
+    conn.query(deleteSql, (err, info)=>{
         if(err){
             console.error(err)
             response.status(500).json({message:"Erro ao deletar o livro"})
+            return
+        }
+
+        if(info.affectedRows === 0){
+            response.status(404).json({message:"Erro não encontrado."})
             return
         }
 
