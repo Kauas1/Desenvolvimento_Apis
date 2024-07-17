@@ -260,7 +260,7 @@ app.post('/funcionarios', (request, response)=>{
     };
 
     const checkSql = /*sql*/ `
-    SELECT * FROM funcionarios WHERE nome = "${nome}" AND cargo = "${cargo}" AND data_contratacao = "${data_contratacao}" AND salario = "${salario}"AND email = "${email}"`;
+    SELECT * FROM funcionarios WHERE email = "${email}" `;
 
     conn.query(checkSql, (err)=>{
         if(err){
@@ -269,12 +269,11 @@ app.post('/funcionarios', (request, response)=>{
             return
         }
 
-        if(email.length > 0 ){
+        if(email.length > 0){
             response.status(404).json({message: "Email já registrado."})
             return
         }
 
-        
         const id = uuidv4()
 
         const insertSql = /*sql*/`INSERT INTO funcionarios(id, nome, cargo, data_contratacao, salario, email)
@@ -315,58 +314,77 @@ app.get('/funcionarios/:id', (request, response)=>{
 })
 
 //Rota 04 -> Atualizar UM (1) funcionário
-app.put('/funcionarios/:id', (request, response)=>{
-    const {id} = request.params
+// Caso o funcionario tenha o email cadastrado não posso deixar ele atualizar para aquele email
+app.put('/funcionarios/:id', (request, response) => {
+    const { id } = request.params;
+    const { nome, cargo, data_contratacao, salario, email } = request.body;
 
-    const {nome, cargo, data_contratacao, salario, email} = request.body
-
-    if(!nome){
-        response.status(400).json({message: 'O nome é obrigatório'});
-        return 
-    } else if(!cargo){
-        response.status(400).json({message: 'O cargo é obrigatório'});
-        return 
-    } else if(!data_contratacao){
-        response.status(400).json({message: 'A data de contratação é obrigatório'});
-        return 
-    } else if(!salario){
-        response.status(400).json({message: 'Salário é obrigatório'});
-        return 
-    } else if(!email){
-        response.status(400).json({message: 'Email é obrigatório'});
-        return 
-    };
+    if (!nome) {
+        response.status(400).json({ message: 'O nome é obrigatório' });
+        return;
+    } else if (!cargo) {
+        response.status(400).json({ message: 'O cargo é obrigatório' });
+        return;
+    } else if (!data_contratacao) {
+        response.status(400).json({ message: 'A data de contratação é obrigatória' });
+        return;
+    } else if (!salario) {
+        response.status(400).json({ message: 'Salário é obrigatório' });
+        return;
+    } else if (!email) {
+        response.status(400).json({ message: 'Email é obrigatório' });
+        return;
+    }
 
     const checkSql = /*sql*/ `
     SELECT * FROM funcionarios WHERE id = "${id}"
-    `
+    `;
 
-    conn.query(checkSql, (err, data)=>{
-        if(err){
-            console.error(err)
-            response.status(500).json({message: "Erro ao ler os dados."})
+    conn.query(checkSql, (err, data) => {
+        if (err) {
+            console.error(err);
+            response.status(500).json({ message: "Erro ao ler os dados." });
+            return;
         }
 
-        if(data.length === 0){
-            response.status(404).json({message: "Erro ao achar o funcionário."})
+        if (data.length === 0) {
+            response.status(404).json({ message: "Erro ao achar o funcionário." });
+            return;
         }
 
-        const updateSql = /*sql*/ `
-        UPDATE funcionarios 
-        SET nome = "${nome}", cargo = "${cargo}", data_contratacao = "${data_contratacao}", salario = "${salario}", email = "${email}"
-        WHERE id = "${id}"`
+        const emailCheckSql = /*sql*/ `
+        SELECT * FROM funcionarios WHERE email = "${email}" AND id != "${id}"
+        `;
 
-        conn.query(updateSql, (err)=>{
-            if(err){
-                console.error(err)
-                response.status(500).json({message: "Erro ao ler os dados."})
-                return
+        conn.query(emailCheckSql, (err, emailData) => {
+            if (err) {
+                console.error(err);
+                response.status(500).json({ message: "Erro ao ler os dados." });
+                return;
             }
 
-            response.status(200).json({message: "Funcionário atualizado."})
-        })
-    })
-})
+            if (emailData.length > 0) {
+                response.status(409).json({ message: "Email já registrado." });
+                return;
+            }
+
+            const updateSql = /*sql*/ `
+            UPDATE funcionarios 
+            SET nome = "${nome}", cargo = "${cargo}", data_contratacao = "${data_contratacao}", salario = "${salario}", email = "${email}"
+            WHERE id = "${id}"`;
+
+            conn.query(updateSql, (err) => {
+                if (err) {
+                    console.error(err);
+                    response.status(500).json({ message: "Erro ao atualizar os dados." });
+                    return;
+                }
+
+                response.status(200).json({ message: "Funcionário atualizado." });
+            });
+        });
+    });
+});
 
 //Rota 05 -> Deletar UM (1) funcionário
 app.delete('/funcionarios/:id', (request, response) => {
