@@ -91,4 +91,51 @@ export const editarCliente = (req,res) => {
         SELECT * FROM clientes
         where ?? = ?
     `
+    checkData = ["email", email] 
+    conn.query(checkSql, checkData, (err,data) =>{
+        if(err){
+            res.status(500).json({message: "Erro ao buscar os dados!"})
+            return console.error(err)
+        }
+
+        if(data.length == 0){
+            return res.status(404).json({message: "Não foi encontrado nenhum usuário."})
+        }
+    
+
+
+const checkEmail = /*sql*/`
+    SELECT * FROM clientes
+`;
+
+conn.query(checkEmail, (err,data) =>{
+    if(err){
+        res.status(500).json({message: "Erro ao buscar os dados!"})
+        return console.error(err)
+    }
+
+    const index = data.findIndex(cliente => cliente.id == id)
+    data.splice(index,1)
+
+    if(data.filter(cliente => cliente.email == email).length > 0){
+        return res.status(403).json({message: "Já existe um usuário com esse email."})
+    }
+
+    const updateSQL = /*sql*/`
+    UPDATE clientes
+    SET ?? = ?, ?? = ?, ?? = ?, ?? = ?
+    WHERE ?? = ?
+    `
+
+    checkUpdateData = ["nome", "senha", "imagem", "email", "cliente_id", nome, senha, imagem, email, id]
+    conn.query(updateSQL, (err)=>{
+        if(err){
+            res.status(500).json({message: "Erro ao atualizar o cliente"})
+            return console.error(err)
+        }
+        res.status(200).json({message: `O cliente ${nome} foi atualizado.`})
+        res.end()
+            })
+        })
+    })
 }
