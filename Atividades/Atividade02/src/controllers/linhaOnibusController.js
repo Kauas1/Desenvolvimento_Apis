@@ -1,5 +1,5 @@
 import conn from "../config/dbconfig.js";
-
+import {v4 as uuidv4} from "uuid"
 // POST,GET(ID), PUT(id), GET
 export const pegarLinha = (req,res) =>{
     const selectSQL = /*sql*/ `
@@ -20,7 +20,7 @@ export const criarLinha = (req,res) =>{
     // numero_linha varchar(255) not null,
     // itinerario varchar(300) not null
 
-    const {nome_linha, numero_linha, itinerario, onibus_id} = req.body
+    const {nome_linha, numero_linha, itinerario } = req.body
 
     if(!nome_linha){
         return res.status(400).json({message: "O nome da Linha não pode ser vazio"});
@@ -31,16 +31,13 @@ export const criarLinha = (req,res) =>{
     if(!itinerario){
         return res.status(400).json({message: "O itinerario não pode ser vazio"});
     }
-    if(!onibus_id){
-        return res.status(400).json({message: "O itinerario não pode ser vazio"});
-    }
+
 
     const checkSql = /*sql*/ `
     SELECT * FROM linhaonibus
     WHERE ?? = ?
     AND ?? = ?
     AND ?? = ?
-    AND ??= ?
     `;
 
     const sqlDataValidade = ["nome_linha", nome_linha, "numero_linha", numero_linha, "itinerario", itinerario]
@@ -72,61 +69,47 @@ export const criarLinha = (req,res) =>{
 
 
 export const editarLinha = (req, res) => {
-  
-    // linha_id varchar(60) primary key NOT NULL,
-    // nome_linha varchar(255) not null,
-    // numero_linha int not null,
-    // itinerario varchar(300) not null,
+    const { linha_id } = req.params;
 
-    // onibus_id varchar(60) not null,
-
-    const {nome_linha, numero_linha, itinerario, onibus_id} = req.body;
-
-    if(!nome_linha){
-        return res.status(400).json({message: "O nome_linha não pode ser vazio"});
-    }
-    if(!numero_linha){
-        return res.status(400).json({message: "O numero_linha não pode ser vazio"});
-    }
-    if(!itinerario){
-        return res.status(400).json({message: "O ano de publicacao não pode ser vazio"});
-    }
-    if(!onibus_id){
-        return res.status(400).json({message: "O onibus_id não pode ser vazio"});
+    if (!linha_id) {
+        return res.status(400).json({ message: "O ID da linha não pode ser vazio" });
     }
 
-    const checkSql = /*sql*/ `
-    SELECT * FROM linhaonibus
-    WHERE ?? = ?`;
+    const sql = /*sql*/ `
+    SELECT l.linha_id, l.nome_linha, l.numero_linha, l.itinerario,
+           o.onibus_id, o.placa, o.modelo, o.ano_fabricacao, o.capacidade
+    FROM linhaonibus l
+    LEFT JOIN onibus o ON l.linha_id = o.linha_id
+    WHERE l.linha_id = ?`;
 
-    const checkId = ["linha_id", id];
-
-    conn.query(checkSql, checkId, (err, data) => {
-        if(err){
-            res.status(500).json({message: "erro ao buscar as linhas"})
+    conn.query(sql, [linha_id], (err, data) => {
+        if (err) {
+            res.status(500).json({ message: "Erro ao buscar a linha e os ônibus" });
             return console.error(err);
         }
-        if(data.length == 0){
-            res.status(409).json({message: "Esta linha não foi encontrado na base de dados!"});
+
+        if (data.length === 0) {
+            res.status(404).json({ message: "Linha não encontrada" });
             return;
         }
-        const updateSQL = /*sql*/ `
-        UPDATE linhaonibus
-        SET ?? = ?, ?? = ?, ?? = ?, ?? = ?, ?? = ?, ?? = ?
-        WHERE ?? = ?
-        `
-        const editSqlVali = ["nome_linha", nome_linha, "numero_linha", numero_linha, "itinerario", itinerario, "onibus_id", onibus_id, "linha_id", id];
 
-        conn.query(updateSQL, editSqlVali, (err) => {
-            if(err){
-                res.status(500).json({message: "erro ao editar as linhas"})
-                return console.error(err);
-            }
-            res.status(200).json({message: `Linha ${nome_linha} atualizado com sucesso!`});
-            res.end()
-        })
+        const linha = {
+            linha_id: data[0].linha_id,
+            nome_linha: data[0].nome_linha,
+            numero_linha: data[0].numero_linha,
+            itinerario: data[0].itinerario,
+            onibus: data.filter(o => o.onibus_id).map(o => ({
+                onibus_id: o.onibus_id,
+                placa: o.placa,
+                modelo: o.modelo,
+                ano_fabricacao: o.ano_fabricacao,
+                capacidade: o.capacidade
+            }))
+        };
+
+        res.status(200).json(linha);
     });
-}
+};
 
 export const pegarLinhaPorId = (req, res) => {
     const {id} = req.params;
@@ -134,7 +117,8 @@ export const pegarLinhaPorId = (req, res) => {
     const checkSql = /*sql*/ `
     SELECT * FROM linhaonibus
     WHERE ?? = ?`;
-    const checkId = ["onibus_id", id]
+    const checkId = ["linha_id", id]
+
     conn.query(checkSql, checkId, (err, data) => {
         if(err){
             res.status(500).json({message: "erro ao buscar as linhas"})

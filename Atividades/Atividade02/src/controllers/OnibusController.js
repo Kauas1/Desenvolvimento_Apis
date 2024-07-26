@@ -4,7 +4,7 @@ import {v4 as uuidv4} from "uuid"
 
 export const criarOnibus = (req, res) => {
     
-    const {placa, modelo, ano_fabricacao, capacidade, motorista_id} = req.body;
+    const {placa, modelo, ano_fabricacao, capacidade, motorista_id, linha_id} = req.body;
 
     if(!placa){
         return res.status(400).json({message: "A placa não pode ser vazio"});
@@ -29,9 +29,10 @@ export const criarOnibus = (req, res) => {
     AND ?? = ?
     AND ?? = ?
     AND ?? = ?
+    AND ?? = ?
     AND ?? = ?`;
     
-    const sqlDataValidate = ["placa", placa, "modelo", modelo, "ano_fabricacao", ano_fabricacao, "capacidade", capacidade, "motorista_id", motorista_id]
+    const sqlDataValidate = ["placa", placa, "modelo", modelo, "ano_fabricacao", ano_fabricacao, "capacidade", capacidade, "motorista_id", motorista_id, "linha_id", linha_id]
     
     conn.query(checkSql, sqlDataValidate, (err, data) => {
         if(err){
@@ -45,10 +46,10 @@ export const criarOnibus = (req, res) => {
 
         const id = uuidv4();
         const insertSQL = /*sql*/ `
-        INSERT INTO Onibus(??, ??, ??, ??, ??, ??)
-        VALUES(?, ?, ?, ?, ?, ?)`;
+        INSERT INTO Onibus(??, ??, ??, ??, ??, ??, ??)
+        VALUES(?, ?, ?, ?, ?, ?, ?)`;
 
-        const dataInsert = ["onibus_id", "placa", "modelo", "ano_fabricacao", "capacidade", "motorista_id", id, placa, modelo, ano_fabricacao, capacidade, motorista_id];
+        const dataInsert = ["onibus_id", "placa", "modelo", "ano_fabricacao", "capacidade", "motorista_id", "linha_id", id, placa, modelo, ano_fabricacao, capacidade, motorista_id, linha_id];
 
         conn.query(insertSQL, dataInsert, (err) => {
             if(err){

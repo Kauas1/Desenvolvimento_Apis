@@ -1,5 +1,5 @@
 import conn from "../config/dbconfig.js";
-import {v4 as uuidv4} from "uuid"
+import {v4 as uuidv4, validate} from "uuid"
 
 export const pegarMotoristas = (req,res) =>{
     const checkSql = /*sql*/`
@@ -63,7 +63,7 @@ export const criarMotorista = (req,res) =>{
 
         conn.query(insertSQL, dataInsert, (err)=>{
             if(err){
-                res.status(500).json({message: "Erro ao cadastrar o livro"})
+                res.status(500).json({message: "Erro ao cadastrar o motorista"})
                 return console.error(err)
             }
             res.status(201).json({message: `O motorista ${nome} foi cadastrado com sucesso`})
@@ -74,42 +74,79 @@ export const pegarMotoristaPorId = (req,res) =>{
     const {id} = req.params;
 
     const checkSql = /*sql*/ `
-    SELECT * FROM motoristas
-    WHERE ?? = ?`;
+    SELECT * FROM onibus
+    WHERE ?? = ?
+    `;
 
-    const checkId = ["onibus_id", id]
-
+    const checkId = ["onibus_id", id];
+    
     conn.query(checkSql, checkId, (err, data) => {
         if(err){
-            res.status(500).json({message: "erro ao buscar os motoristas"})
+            res.status(500).json({message: `Erro ao buscar os dados`});
             return console.error(err);
         }
-        const buscaMotorista = data.some(motoristas => motoristas.motorista_id == id);
-        if(buscaMotorista == false){
-            res.status(409).json({message: "Este motorista não foi encontrado na base de dados!"});
-            return;
+
+        if(data.length == 0){
+            return res.status(404).json({message: "Não foi encontrado nenhum onibus com este ID"});
         }
-        const motoristas = data;
-        res.status(200).json(motoristas);
-    });
+
+        const checkMoto = /*sql*/ `
+            SELECT * FROM motoristas
+            WHERE ?? = ?
+        `;
+        const validateSql = ["motorista_id", id];
+
+        conn.query(checkMoto, validateSql, (err, data) => {
+            if(err){
+                res.status(500).json({message: `Erro ao buscar os dados`});
+                return console.error(err);
+            }
+    
+            if(data.length == 0){
+                return res.status(404).json({message: "Não foi encontrado nenhum motorista"});
+            }
+
+            const motorista = data;
+            res.status(200).json(motorista);
+            res.end();
+        })
+    })
 }
 
 export const deletarMotorista = (req,res) =>{
-    const {id} = req.params
+    const {id} = req.params;
 
-    const deleteSQL = /*sql*/ `
-    DELETE FROM motoristas
-    WHERE ?? = ?`;
+    const checkSql = /*sql*/ `
+    SELECT * FROM onibus
+    WHERE ?? = ?
+    `;
 
-    const checkId = ["motorista_id", id]
-    conn.query(deleteSQL, checkId, (err,info) => {
+    const validateSql = ["onibus_id", id];
+    
+    conn.query(checkSql, validateSql, (err, data) => {
         if(err){
-            res.status(500).json({message:"Erro ao deletar o Motorista"})
+            res.status(500).json({message: `Erro ao buscar os dados!`});
+            return console.error(err);
         }
-        if(info.affectedRows == 0){
-            res.status(404).json({messae: "Motorista não encontrado na base de dados"})
+
+        if(data.length == 0){
+            return res.status(404).json({message: "Não foi encontrado nenhum onibus com este ID!"});
         }
-        res.status(204);
-        res.end()
+
+        const checkMoto = /*sql*/ `
+            DELETE FROM motoristas
+            WHERE ?? = ?
+        `;
+        const validateSql = ["motorista_id", id];
+
+        conn.query(checkMoto, validateSql, (err) => {
+            if(err){
+                res.status(500).json({message: `Erro ao buscar os dados!`});
+                return console.error(err);
+            }
+    
+            res.status(201).json({message: "Motorista apagado com sucesso"})
+            res.end();
+        })
     })
 }

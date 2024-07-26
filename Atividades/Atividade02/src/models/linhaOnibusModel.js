@@ -5,11 +5,9 @@ const linhaOnibusTable = /*sql*/`
         linha_id varchar(60) primary key NOT NULL,
         nome_linha varchar(255) not null,
         numero_linha int not null,
-        itinerario varchar(300) not null,
+        itinerario varchar(300) not null
 
-        onibus_id varchar(60) not null,
 
-        foreign key (onibus_id) references onibus(onibus_id)
     );`;
 
 conn.query(linhaOnibusTable, (err,result,field)=>{
