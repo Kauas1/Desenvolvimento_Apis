@@ -1,3 +1,4 @@
+import { response } from "express";
 import jwt from "jsonwebtoken";
 
 //Assincrono
@@ -7,7 +8,15 @@ const createUserToken = async (usuario, req,res) =>{
     {
         nome: usuario.nome,
         id: usuario.usuario_id
-    }
+    },
+    "SENHASUPERSEGURAEDIFICIL" //senha 
     )
     //Retornar o token
+    response.status(200).json({
+        mensage: "Você está logado!",
+        token: token,
+        usuarioId: usuario.usuario_id
+    })
 }
+
+export default createUserToken
