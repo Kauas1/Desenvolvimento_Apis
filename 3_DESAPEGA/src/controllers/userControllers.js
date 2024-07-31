@@ -43,7 +43,7 @@ export const registerUser = (req, res) => {
                 res.status(500).json("Ocorreu um erro na busca!")
                 return console.error(err);
             }
-
+            //Usuário esteja logado na aplicação
             res.status(201).json("Usuario criado!");
         })
     })
