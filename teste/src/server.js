@@ -7,15 +7,15 @@ const PORT = 3333;
 import conn from "./config/conn.js";
 
 //Importação dos módulos (TABELA)
-import "./models/usuarioModel.js";
+import "./models/usuariosModel.js";
 
 //Importar as rotas
 import usuarioRouter from "./routes/usuariosRoutes.js";
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json);
+app.use(urlencoded({extended:true}))
+app.use(json()); 
 
 app.get("/", (req, res) => {
   res.send("olá, ");
