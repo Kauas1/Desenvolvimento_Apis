@@ -5,7 +5,7 @@ import jwt  from "jsonwebtoken";
 //helpers
 import createUserToken from "../helpers/create-user-token.js"; 
 import getToken from "../helpers/get-token.js";
-import { json } from "express";
+import { json, response } from "express";
 
 
 //Criar usuário.
@@ -149,6 +149,33 @@ export const checkUser = (req,res) =>{
 
 }
 
+export const getUserById = (req,res) =>{
+    const {id} = req.params
+
+    const checkSql = /*sql*/ `
+    SELECT usuario_id, nome, email, telefone, imagem 
+    FROM usuarios
+    WHERE ?? = ?  
+    `
+    const checkData = ["usuario_id", id]
+
+    conn.query(checkSql, checkData, (err, data) =>{
+        if(err){
+            console.error(err)
+            res.status(500).json({err: "Erro ao buscar usuários."})
+            return
+        }
+        if(data.length === 0){
+            res.status(404).json({err: "Usuário não encontrado."})
+            return
+        }
+
+        const usuario = data[0]
+
+        res.status(200).json(usuario)
+    })
+}
+
 export const listUser = (req, res) => {
     const select = /*sql*/ `
         SELECT * FROM users;
@@ -162,4 +189,10 @@ export const listUser = (req, res) => {
 
         res.status(200).json(data);
     })
+}
+
+export const editUser = async (req,res) =>{
+    const {id} = req.params
+
+    //verificar se 
 }
