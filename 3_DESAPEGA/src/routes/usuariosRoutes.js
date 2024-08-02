@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { registerUser, login, checkUser, getUserById, editUser } from "../controllers/userControllers.js";
 import validarUsuario from "../helpers/validateUser.js";
+import verifyToken from "../helpers/verify-token.js"
 import conn from "../config/conn.js";
 const router = Router();
 
@@ -10,6 +11,6 @@ router.post("/login", login)
 router.get("/checkuser", checkUser) // Auxiliar Front-End
 router.get("/:id", getUserById)
 // Verificar se está logado e upload imagem para perfil
-router.put("/edit/:id", editUser)
+router.put("/edit/:id", verifyToken, editUser)
 
 export default router;

@@ -2,11 +2,12 @@ import conn from "../config/conn.js";
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import jwt  from "jsonwebtoken";
+
 //helpers
 import createUserToken from "../helpers/create-user-token.js"; 
 import getToken from "../helpers/get-token.js";
-import { json, response } from "express";
-
+import getUserByToken from "../helpers/get-user-by-token.js";
+import { response } from "express";
 
 //Criar usuário.
 export const registerUser =  (req, res) => {
@@ -194,5 +195,87 @@ export const listUser = (req, res) => {
 export const editUser = async (req,res) =>{
     const {id} = req.params
 
-    //verificar se 
+    //verificar se o usuário está logado
+    try{
+
+      const token = getToken(req)
+      // Buscar dados no banco, após isso ele faz uma nova consulta ao banco
+      const user = await getUserByToken(token)
+     
+      const {nome,email,telefone} = req.params
+      if(!nome){
+        response.status(400).json({message: "O nome é obrigatório."})
+        return
+    }
+      if(!email){
+        response.status(400).json({message: "O Email é obrigatório."})
+        return
+      }
+      if(!telefone){
+        response.status(400).json({message: "O Telefone é obrigatório."})
+        return
+      }
+    
+    const checkSql = /*sql*/ `
+    SELECT * 
+    FROM usuarios 
+    WHERE ?? = ?
+    `
+
+    const checkData = ["usuario_id", id]
+    conn.query(checkSql,checkData, (err,data)=>{
+        if(err){
+            console.error(err)
+            res.status(500).json({message: "Erro ao buscar o usuário"})
+            return
+        }
+
+        if(data.length === 0){
+            res.status(404).json({message: "Usuário não encontrado"})
+            return
+        }
+
+        // çlkb nmkjl,vuiovuh eu sabvo muito - Validações.
+
+        const checkEmailSql = /*sql*/`
+        SELECT * FROM usuarios WHERE ?? = ? AND ?? != ?
+        `
+    const checkEmailData = ["email", email, "usuario_id", id]
+
+    conn.query(checkEmailSql, checkEmailData, (err,data)=>{
+        if(err){
+            console.error(err)
+            res.status(500).json({err: "Erro ao tentar criar os dados."})
+            return
+        }
+
+        if(data.length > 0){
+            res.status(409).json({err: "Email já está em uso."})
+            return
+        }
+        
+        const updateSql = /*sql*/ `
+        UPDATE usuarios 
+        SET ? 
+        WHERE ?? = ?
+        `
+
+        const updateData = [{nome, email, telefone}, "usuario_id", id]
+
+        conn.query(updateSql, updateData, (err)=>{
+            if(err){
+                console.error(err)
+                res.status(500).json({err: "Erro ao buscar o email"})
+                return
+            }
+
+            res.status(200).json({message: "Usuário atualizado com sucesso"})
+      });
+    });
+   });
+
+      
+    }catch(error){
+        res.status(500).json({err: error})
+    }
 }
