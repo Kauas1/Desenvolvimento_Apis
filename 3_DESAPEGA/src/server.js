@@ -1,39 +1,46 @@
 import "dotenv/config";
 import express from "express";
-import path from "node:path"
-import {fileURLToPath} from "node:url"
-const PORT = 3333;
+import cors from "cors"
 
-//Importar conexão
-import conn from "./config/conn.js";
+const PORT = process.env.PORT;
 
-//Importação dos módulos (TABELA)
-import "./models/usuarioModel.js";
+//importar conexão 
+import conn from "./config/conn.js"
 
-//Importar as rotas
-import usuarioRouter from "./routes/usuariosRoutes.js";
+//importação dos módulos (tabela) 
+import "./models/usuarioModel.js"
+import "./models/objetoModel.js"
+import "./models/objetoImagesModel.js"
+
+//importação de rotas
+import usuarioRouter from "./routes/usuariosRoutes.js"
+import objetoRouter from "./routes/objetoRoutes.js"
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-//localizar onde está as pasta public
-app.use("/public", express.static(path.join(__dirname, "public")))
+app.use(express.urlencoded({extended:true}))
+app.use(express.json())
 
 
+//CORS
+app.use(cors({
+  origin: 'http://localhost:5173' 
+}))
 
-//Utilizar a rotas
-app.use("/usuarios", usuarioRouter);
+//Utilizar a Rota
+app.use('/usuarios', usuarioRouter)
+app.use('/objetos', objetoRouter)
 
 //404
-app.use((request, response) => {
-  response.status(404).json({ message: "Recurso não entrado" });
-});
+app.use((request, response)=>{
+    response.status(404).json({msg: 'Recurso não encontrado'})
+})
+
+//404
+// app.get("*", (request, response) => {
+//   response.send("Olá, mundo!");
+// });
 
 app.listen(PORT, () => {
-  console.log("Servidor on PORT " + PORT);
+  console.log("Servidor on PORT " +PORT );
 });
