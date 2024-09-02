@@ -11,7 +11,7 @@ export const pegarClientes = (req, res) => {
             return
         }
         const clientes = data
-        res.status(200).json({message: ""})
+        res.status(200).json(clientes)
     })
 }
 export const criarCliente = (req, res) => {
@@ -39,7 +39,7 @@ export const criarCliente = (req, res) => {
     WHERE ?? = ?
     `;
 
-    checkData = ["email", email]
+    const checkData = ["email", email]
     conn.query(checkSql, checkData, (err, data) => {
         if(err){
             res.status(500).json({message: "Erro ao cadastrar o funcionario!"});
@@ -55,7 +55,7 @@ export const criarCliente = (req, res) => {
         VALUES(?, ?, ?, ?, ?)
         `;
 
-        checkAdd = ["id", "nome", "senha", "imagem", "email", id, nome, senha, imagem, email]
+      const  checkAdd = ["id", "nome", "senha", "imagem", "email", id, nome, senha, imagem, email]
         conn.query(addCliente, checkAdd,(err) => {
             if(err){
                 res.status(500).json({message: "Erro ao cadastrar o cliente!"});
